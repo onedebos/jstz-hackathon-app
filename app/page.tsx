@@ -26,7 +26,7 @@ export default async function Home() {
             <span className="text-[#6c255f]">2025</span>
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Build the future. Create something amazing. Win prizes 🎄 ❄️ 🎁 🎄 ✨
+            Build the future, using JavaScript on chain. Win prizes 🎄 ❄️ 🎁 🎄 ✨
           </p>
           
           {/* Countdown */}
