@@ -84,6 +84,8 @@ export default function SubmitPage() {
   useEffect(() => {
     if (!user && !loading) {
       setShowLoginModal(true);
+    } else if (user) {
+      setShowLoginModal(false);
     }
   }, [user, loading]);
 
@@ -114,8 +116,17 @@ export default function SubmitPage() {
           <span className="text-white">Submit Project</span>
         </h1>
         <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
+        
+        {!user && !loading && (
+          <div className="text-center text-gray-400 mt-12">
+            <p className="text-xl">Please log in to submit a project.</p>
+          </div>
+        )}
+        
+        {user && (
+          <>
 
-        {teams.length === 0 ? (
+            {teams.length === 0 ? (
           <div className="max-w-2xl mx-auto text-center">
             <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-12">
               <p className="text-gray-300 text-lg mb-6">
@@ -225,10 +236,11 @@ export default function SubmitPage() {
                 </button>
               </form>
             </div>
-          </div>
+            </div>
+          )}
+          </>
         )}
       </div>
-      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
     </div>
   );
 }

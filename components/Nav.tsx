@@ -29,43 +29,6 @@ export function Nav() {
               <Logo />
             </Link>
             <div className="flex gap-6 items-center">
-              {user ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowDropdown(!showDropdown)}
-                    className="flex items-center gap-2 text-white hover:text-[#8aaafc] transition-colors"
-                  >
-                    <span className="text-sm">{user.name}</span>
-                    <span className="text-xs">▼</span>
-                  </button>
-                  {showDropdown && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setShowDropdown(false)}
-                      />
-                      <div className="absolute right-0 mt-2 bg-[#121212] border border-[#6c255f] rounded-lg shadow-lg z-20 min-w-[150px]">
-                        <button
-                          onClick={() => {
-                            logout();
-                            setShowDropdown(false);
-                          }}
-                          className="w-full text-left px-4 py-2 text-white hover:bg-[#0c0c0c] transition-colors text-sm"
-                        >
-                          Logout
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="bg-[#8aaafc] hover:bg-[#6b8dd9] text-white px-4 py-2 rounded transition-colors text-sm font-semibold"
-                >
-                  Login
-                </button>
-              )}
               <Link 
               href="/" 
               className={`transition-colors ${
@@ -136,6 +99,51 @@ export function Nav() {
             >
               Admin
             </Link>
+            <a
+              href="https://jstz.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors text-white hover:text-gray-300"
+            >
+              Docs
+            </a>
+              {user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowDropdown(!showDropdown)}
+                    className="flex items-center gap-2 text-white hover:text-[#8aaafc] transition-colors"
+                  >
+                    <span className="text-sm">{user.name}</span>
+                    <span className="text-xs">▼</span>
+                  </button>
+                  {showDropdown && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setShowDropdown(false)}
+                      />
+                      <div className="absolute right-0 mt-2 bg-[#121212] border border-[#6c255f] rounded-lg shadow-lg z-20 min-w-[150px]">
+                        <button
+                          onClick={() => {
+                            logout();
+                            setShowDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-white hover:bg-[#0c0c0c] transition-colors text-sm"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="bg-[#8aaafc] hover:bg-[#6b8dd9] text-white px-4 py-2 rounded transition-colors text-sm font-semibold"
+                >
+                  Login
+                </button>
+              )}
             </div>
           </div>
         </div>

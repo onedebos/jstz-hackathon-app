@@ -138,16 +138,28 @@ export default function TeamsPage() {
   useEffect(() => {
     if (!user && !loading) {
       setShowLoginModal(true);
+    } else if (user) {
+      setShowLoginModal(false);
     }
   }, [user, loading]);
 
   return (
     <div className="min-h-screen bg-[#0c0c0c] py-16">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-12">
-          <h1 className="text-5xl font-bold">
-            <span className="text-white">Teams</span>
-          </h1>
+        <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
+        
+        {!user && !loading && (
+          <div className="text-center text-gray-400 mt-12">
+            <p className="text-xl">Please log in to view and manage teams.</p>
+          </div>
+        )}
+        
+        {user && (
+          <>
+            <div className="flex justify-between items-center mb-12">
+              <h1 className="text-5xl font-bold">
+                <span className="text-white">Teams</span>
+              </h1>
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
             className="bg-[#6c255f] hover:bg-[#8a3a7a] text-white px-6 py-3 rounded transition-colors"
@@ -194,7 +206,7 @@ export default function TeamsPage() {
           {teams.map((team) => {
             const memberCount = team.members?.length || 0;
             const isMember = userTeams.has(team.id);
-            const isLeader = team.user_id === user.id;
+            const isLeader = team.leader_id === user.id;
             const isFull = memberCount >= team.max_members;
 
             return (
@@ -246,9 +258,10 @@ export default function TeamsPage() {
           <div className="text-center text-gray-400 mt-12">
             <p className="text-xl">No teams yet. Create the first one! 🎄</p>
           </div>
+            )}
+          </>
         )}
       </div>
-      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
     </div>
   );
 }

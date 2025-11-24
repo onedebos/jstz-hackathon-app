@@ -131,9 +131,8 @@ export default function IdeasPage() {
         
         {user && (
           <>
-
-        {/* Tabs */}
-        <div className="flex gap-4 mb-8 border-b border-gray-800">
+            {/* Tabs */}
+            <div className="flex gap-4 mb-8 border-b border-gray-800">
           <button
             onClick={() => setActiveTab('ideas')}
             className={`px-6 py-3 font-semibold transition-colors border-b-2 ${
@@ -152,12 +151,12 @@ export default function IdeasPage() {
                 : 'border-transparent text-gray-400 hover:text-gray-300'
             }`}
           >
-            Create Idea
-          </button>
-        </div>
+              Create Idea
+            </button>
+          </div>
 
-        {/* Ideas Tab Content */}
-        {activeTab === 'ideas' && (
+          {/* Ideas Tab Content */}
+          {activeTab === 'ideas' && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {ideas.map((idea) => (
@@ -200,8 +199,8 @@ export default function IdeasPage() {
           </>
         )}
 
-        {/* Create Idea Tab Content */}
-        {activeTab === 'create' && (
+          {/* Create Idea Tab Content */}
+          {activeTab === 'create' && (
           <div className="max-w-2xl mx-auto">
             <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-6">
               <h2 className="text-2xl font-bold text-white mb-4">Submit an Idea 💡</h2>
@@ -232,9 +231,10 @@ export default function IdeasPage() {
               </form>
             </div>
           </div>
+          )}
+          </>
         )}
       </div>
-      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
     </div>
   );
 }

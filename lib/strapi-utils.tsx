@@ -39,10 +39,10 @@ export function renderRichText(nodes: RichTextNode[] | string): React.ReactNode 
       );
     }
 
-    // Headings
-    if (node.type === 'heading') {
-      const level = node.level || 3;
-      const HeadingTag = `h${level}` as keyof JSX.IntrinsicElements;
+        // Headings
+        if (node.type === 'heading') {
+          const level = node.level || 3;
+          const HeadingTag = `h${level}` as keyof React.JSX.IntrinsicElements;
       const className =
         level === 3
           ? 'text-xl font-bold text-[#8aaafc] mt-6 mb-3'

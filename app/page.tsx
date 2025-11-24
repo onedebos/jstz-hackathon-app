@@ -12,34 +12,22 @@ export default async function Home() {
       <Snowfall />
       <div className="container mx-auto px-4 py-16 relative z-10">
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <div className="mb-8">
-            <span className="font-mono text-white text-6xl">js</span>
-            <span className="text-[#6c255f] text-6xl">{'{'}</span>
-            <span className="font-mono text-white text-6xl">tz</span>
-            <span className="text-[#6c255f] text-6xl">{'}'}</span>
-            <span className="text-white text-6xl"> the season </span>
-            <span className="text-6xl">🌲🧑‍🎄</span>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+        <div className="text-center mb-16 mt-12 md:mt-20">
+          <h1 className="text-5xl md:text-7xl font-bold mb-4">
+            <span className="font-mono text-white">js</span>
+            <span className="text-[#6c255f]">{'{'}</span>
+            <span className="font-mono text-white">tz</span>
+            <span className="text-[#6c255f]">{'}'}</span>
+            <span className="text-white"> the season </span>
+            <span>🌲🧑‍🎄</span>
+          </h1>
+          <p className="text-lg md:text-xl text-gray-400 mb-8">
             <span className="text-white">Hackathon</span>{' '}
             <span className="text-[#6c255f]">2025</span>
-          </h1>
+          </p>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Build the future. Create something amazing. Win prizes. 🎄✨
           </p>
-          
-          {/* jstz.io Button */}
-          <div className="mb-8">
-            <a
-              href="https://jstz.io"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-[#8aaafc] hover:bg-[#6b8dd9] text-white px-8 py-3 rounded-lg transition-colors font-semibold"
-            >
-              Visit jstz.io →
-            </a>
-          </div>
           
           {/* Countdown */}
           <div className="mb-12 flex justify-center">
