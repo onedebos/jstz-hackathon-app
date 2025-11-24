@@ -24,6 +24,7 @@ export default function IdeasPage() {
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [votedIdeas, setVotedIdeas] = useState<Set<string>>(new Set());
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -97,16 +98,6 @@ export default function IdeasPage() {
     await loadVotes();
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0c0c0c] py-16 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
-
-  const [showLoginModal, setShowLoginModal] = useState(false);
-
   useEffect(() => {
     if (!user && !loading) {
       setShowLoginModal(true);
@@ -114,6 +105,14 @@ export default function IdeasPage() {
       setShowLoginModal(false);
     }
   }, [user, loading]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0c0c0c] py-16 flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0c0c0c] py-16">

@@ -44,6 +44,9 @@ const gtEesti = localFont({
 export const metadata: Metadata = {
   title: "🎁 'Js{tz} the Season! 🌲🧑‍🎄",
   description: "Jstz Hackathon 2025 - Build, Create, Win",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({

@@ -37,10 +37,10 @@ export async function unvoteIdea(ideaId: string, userId: string) {
 }
 
 // Teams
-export async function createTeam(name: string, description: string, userId: string) {
+export async function createTeam(name: string, description: string, userId: string, ideaId: string) {
   const { data, error } = await supabase
     .from('teams')
-    .insert({ name, description, user_id: userId })
+    .insert({ name, description, user_id: userId, idea_id: ideaId })
     .select()
     .single();
 
