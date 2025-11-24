@@ -21,10 +21,10 @@ export default async function Home() {
             <span className="text-white"> the season </span>
             <span>🌲🧑‍🎄</span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-400 mb-8">
+          <h2 className="text-5xl md:text-7xl font-bold mb-8">
             <span className="text-white">Hackathon</span>{' '}
             <span className="text-[#6c255f]">2025</span>
-          </p>
+          </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Build the future. Create something amazing. Win prizes. 🎄✨
           </p>
