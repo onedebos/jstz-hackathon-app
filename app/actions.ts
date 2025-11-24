@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 export async function submitIdea(title: string, description: string, userId: string) {
   const { data, error } = await supabase
     .from('ideas')
-    .insert({ title, description, user_id: userId })
+    .insert({ title, description, author_id: userId })
     .select()
     .single();
 
@@ -19,18 +19,31 @@ export async function submitIdea(title: string, description: string, userId: str
 export async function voteIdea(ideaId: string, userId: string) {
   const { error } = await supabase
     .from('idea_votes')
-    .insert({ idea_id: ideaId, user_id: userId });
+    .insert({ idea_id: ideaId, voter_id: userId });
 
   if (error && error.code !== '23505') throw error; // Ignore duplicate vote
   revalidatePath('/ideas');
 }
 
 export async function unvoteIdea(ideaId: string, userId: string) {
+  // Delete only one vote (the most recent one)
+  const { data, error: selectError } = await supabase
+    .from('idea_votes')
+    .select('id')
+    .eq('idea_id', ideaId)
+    .eq('voter_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (selectError || !data) {
+    throw selectError || new Error('No vote found to remove');
+  }
+
   const { error } = await supabase
     .from('idea_votes')
     .delete()
-    .eq('idea_id', ideaId)
-    .eq('user_id', userId);
+    .eq('id', data.id);
 
   if (error) throw error;
   revalidatePath('/ideas');
@@ -40,7 +53,7 @@ export async function unvoteIdea(ideaId: string, userId: string) {
 export async function createTeam(name: string, description: string, userId: string, ideaId: string) {
   const { data, error } = await supabase
     .from('teams')
-    .insert({ name, description, user_id: userId, idea_id: ideaId })
+    .insert({ name, description, leader_id: userId, idea_id: ideaId })
     .select()
     .single();
 
@@ -49,7 +62,7 @@ export async function createTeam(name: string, description: string, userId: stri
   // Add leader as member
   await supabase
     .from('team_members')
-    .insert({ team_id: data.id, user_id_uuid: userId });
+    .insert({ team_id: data.id, user_id: userId });
 
   revalidatePath('/teams');
   return data;
@@ -58,7 +71,7 @@ export async function createTeam(name: string, description: string, userId: stri
 export async function joinTeam(teamId: string, userId: string) {
   const { error } = await supabase
     .from('team_members')
-    .insert({ team_id: teamId, user_id_uuid: userId });
+    .insert({ team_id: teamId, user_id: userId });
 
   if (error && error.code !== '23505') throw error; // Ignore duplicate join
   revalidatePath('/teams');
@@ -69,7 +82,7 @@ export async function leaveTeam(teamId: string, userId: string) {
     .from('team_members')
     .delete()
     .eq('team_id', teamId)
-    .eq('user_id_uuid', userId);
+    .eq('user_id', userId);
 
   if (error) throw error;
   revalidatePath('/teams');
@@ -107,7 +120,7 @@ export async function submitProject(
 export async function voteShowcase(projectId: string, userId: string) {
   const { error } = await supabase
     .from('showcase_votes')
-    .insert({ project_id: projectId, user_id: userId });
+    .insert({ project_id: projectId, voter_id: userId });
 
   if (error && error.code !== '23505') throw error;
   revalidatePath('/showcase');
@@ -118,7 +131,7 @@ export async function unvoteShowcase(projectId: string, userId: string) {
     .from('showcase_votes')
     .delete()
     .eq('project_id', projectId)
-    .eq('user_id', userId);
+    .eq('voter_id', userId);
 
   if (error) throw error;
   revalidatePath('/showcase');

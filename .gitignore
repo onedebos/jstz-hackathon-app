@@ -42,3 +42,6 @@ next-env.d.ts
 
 # supabase schema files
 supabase-schema*.sql
+
+# documentation files
+SLACK_SUMMARY.md

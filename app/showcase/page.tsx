@@ -83,7 +83,7 @@ export default function ShowcasePage() {
     const { data } = await supabase
       .from('showcase_votes')
       .select('project_id')
-      .eq('user_id', user.id);
+      .eq('voter_id', user.id);
     if (data) {
       setVotedProjects(new Set(data.map(v => v.project_id)));
     }

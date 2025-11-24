@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useUser } from '@/components/UserProvider';
 import { LoginModal } from '@/components/LoginModal';
 import { submitIdea, voteIdea, unvoteIdea } from '@/app/actions';
+import Counter from '@/components/AnimatedCounter';
 
 interface Idea {
   id: string;
@@ -14,6 +15,10 @@ interface Idea {
   vote_count: number;
   is_locked: boolean;
   created_at: string;
+  author?: {
+    id: string;
+    name: string;
+  };
 }
 
 export default function IdeasPage() {
@@ -24,6 +29,7 @@ export default function IdeasPage() {
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [votedIdeas, setVotedIdeas] = useState<Set<string>>(new Set());
+  const [userVoteCounts, setUserVoteCounts] = useState<Map<string, number>>(new Map());
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
@@ -54,7 +60,31 @@ export default function IdeasPage() {
       .select('*')
       .order('vote_count', { ascending: false })
       .order('created_at', { ascending: false });
-    if (data) setIdeas(data);
+    
+    if (data) {
+      // Load author names for each idea
+      const ideasWithAuthors = await Promise.all(
+        data.map(async (idea) => {
+          try {
+            const { data: authorData } = await supabase
+              .from('users')
+              .select('id, name')
+              .eq('id', idea.author_id)
+              .single();
+            
+            return {
+              ...idea,
+              author: authorData || undefined,
+            };
+          } catch (error) {
+            // If user not found, just return idea without author
+            return idea;
+          }
+        })
+      );
+      
+      setIdeas(ideasWithAuthors);
+    }
   }
 
   async function loadVotes() {
@@ -62,8 +92,16 @@ export default function IdeasPage() {
     const { data } = await supabase
       .from('idea_votes')
       .select('idea_id')
-      .eq('user_id', user.id);
+      .eq('voter_id', user.id);
     if (data) {
+      // Count votes per idea for this user
+      const voteCounts = new Map<string, number>();
+      data.forEach((vote) => {
+        voteCounts.set(vote.idea_id, (voteCounts.get(vote.idea_id) || 0) + 1);
+      });
+      setUserVoteCounts(voteCounts);
+      
+      // Set voted ideas (any idea with at least one vote)
       setVotedIdeas(new Set(data.map(v => v.idea_id)));
     }
   }
@@ -90,12 +128,45 @@ export default function IdeasPage() {
 
   async function handleVote(ideaId: string) {
     if (!user) return;
-    if (votedIdeas.has(ideaId)) {
+    const currentVoteCount = userVoteCounts.get(ideaId) || 0;
+    
+    // Optimistically update the UI immediately for smooth animation
+    setIdeas(prevIdeas => 
+      prevIdeas.map(idea => {
+        if (idea.id === ideaId) {
+          return {
+            ...idea,
+            vote_count: currentVoteCount >= 5 
+              ? Math.max(0, idea.vote_count - 1)
+              : idea.vote_count + 1
+          };
+        }
+        return idea;
+      })
+    );
+    
+    // Update vote counts optimistically
+    if (currentVoteCount >= 5) {
+      setUserVoteCounts(prev => {
+        const newMap = new Map(prev);
+        newMap.set(ideaId, currentVoteCount - 1);
+        return newMap;
+      });
       await unvoteIdea(ideaId, user.id);
     } else {
+      setUserVoteCounts(prev => {
+        const newMap = new Map(prev);
+        newMap.set(ideaId, currentVoteCount + 1);
+        return newMap;
+      });
       await voteIdea(ideaId, user.id);
     }
-    await loadVotes();
+    
+    // Sync with server after a short delay to allow animation to play
+    setTimeout(() => {
+      loadIdeas();
+      loadVotes();
+    }, 300);
   }
 
   useEffect(() => {
@@ -130,6 +201,13 @@ export default function IdeasPage() {
         
         {user && (
           <>
+            {/* Max Votes Info */}
+            <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-4 mb-6">
+              <p className="text-gray-300 text-sm text-center">
+                💡 You can vote up to <span className="text-white font-semibold">5 times</span> per idea
+              </p>
+            </div>
+            
             {/* Tabs */}
             <div className="flex gap-4 mb-8 border-b border-gray-800">
           <button
@@ -169,18 +247,27 @@ export default function IdeasPage() {
                     </div>
                   )}
                   <h3 className="text-xl font-bold text-white mb-2">{idea.title}</h3>
+                  {idea.author && (
+                    <p className="text-gray-400 text-xs mb-2">by {idea.author.name}</p>
+                  )}
                   <p className="text-gray-300 mb-4 text-sm">{idea.description}</p>
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() => handleVote(idea.id)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
+                      className={`flex items-center gap-2 px-4 py-2 rounded transition-colors cursor-pointer ${
                         votedIdeas.has(idea.id)
                           ? 'bg-[#6c255f] text-white'
                           : 'bg-[#0c0c0c] text-gray-300 hover:bg-[#121212]'
                       }`}
+                      title={userVoteCounts.get(idea.id) ? `You've voted ${userVoteCounts.get(idea.id)}/5 times` : 'Click to vote (max 5 votes)'}
                     >
                       <span>👍</span>
-                      <span>{idea.vote_count}</span>
+                      <Counter key={`${idea.id}-${idea.vote_count}`} value={idea.vote_count} />
+                      {userVoteCounts.get(idea.id) && (
+                        <span className="text-xs opacity-75 ml-1">
+                          ({userVoteCounts.get(idea.id)}/5)
+                        </span>
+                      )}
                     </button>
                     <span className="text-xs text-gray-400">
                       {new Date(idea.created_at).toLocaleDateString()}

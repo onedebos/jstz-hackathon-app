@@ -43,7 +43,7 @@ export default function SubmitPage() {
     const { data: memberships } = await supabase
       .from('team_members')
       .select('team_id')
-      .eq('user_id_uuid', user.id);
+      .eq('user_id', user.id);
 
     if (memberships && memberships.length > 0) {
       const teamIds = memberships.map(m => m.team_id);
@@ -100,7 +100,7 @@ export default function SubmitPage() {
                 Submissions Not Open Yet
               </h1>
               <p className="text-gray-300 text-lg">
-                Project submissions will open on December 1, 2025. 🎄
+                Completed Hackathon Project submissions will open on December 1, 2025. 🎄
               </p>
             </div>
           </div>

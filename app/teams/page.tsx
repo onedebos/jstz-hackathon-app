@@ -125,7 +125,7 @@ export default function TeamsPage() {
         const { data: userMemberships } = await supabase
           .from('team_members')
           .select('team_id')
-          .eq('user_id_uuid', user.id);
+          .eq('user_id', user.id);
         if (userMemberships) {
           setUserTeams(new Set(userMemberships.map(m => m.team_id)));
         }
@@ -241,7 +241,10 @@ export default function TeamsPage() {
             {!canCreateTeams && (
               <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-6 mb-8 text-center">
                 <p className="text-gray-300 text-lg">
-                  Team creation opens on <span className="text-white font-semibold">November 28, 2025</span> after idea voting is complete.
+                  Teams will open after all ideas have been submitted and voting is complete.
+                </p>
+                <p className="text-white font-semibold text-lg mt-2">
+                  Friday, November 28th, 2025
                 </p>
                 <p className="text-gray-400 text-sm mt-2">
                   Only the top 8 ideas by vote count will be eligible for team formation.
@@ -371,11 +374,11 @@ export default function TeamsPage() {
           })}
         </div>
 
-        {teams.length === 0 && (
+        {teams.length === 0 && canCreateTeams && (
           <div className="text-center text-gray-400 mt-12">
             <p className="text-xl">No teams yet. Create the first one! 🎄</p>
           </div>
-            )}
+        )}
           </>
         )}
       </div>
