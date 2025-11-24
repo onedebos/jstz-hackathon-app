@@ -70,21 +70,40 @@ export function renderRichText(nodes: RichTextNode[] | string): React.ReactNode 
       );
     }
 
-    // List item
-    if (node.type === 'list-item') {
-      return (
-        <li key={key} className="text-gray-300">
-          {node.children ? renderRichText(node.children) : null}
-        </li>
-      );
-    }
+        // List item
+        if (node.type === 'list-item') {
+          return (
+            <li key={key} className="text-gray-300">
+              {node.children ? renderRichText(node.children) : null}
+            </li>
+          );
+        }
 
-    // Default: render children if available
-    if (node.children) {
-      return <React.Fragment key={key}>{renderRichText(node.children)}</React.Fragment>;
-    }
+        // Link
+        if (node.type === 'link') {
+          const url = (node as any).url || '';
+          const target = url.startsWith('http') ? '_blank' : undefined;
+          const rel = target === '_blank' ? 'noopener noreferrer' : undefined;
+          
+          return (
+            <a
+              key={key}
+              href={url}
+              target={target}
+              rel={rel}
+              className="text-[#8aaafc] hover:text-[#6b8dd9] underline"
+            >
+              {node.children ? renderRichText(node.children) : url}
+            </a>
+          );
+        }
 
-    return null;
+        // Default: render children if available
+        if (node.children) {
+          return <React.Fragment key={key}>{renderRichText(node.children)}</React.Fragment>;
+        }
+
+        return null;
   });
 }
 

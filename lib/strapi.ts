@@ -21,6 +21,8 @@ export type RichTextNode = {
   text?: string;
   level?: number;
   format?: string;
+  url?: string;
+  linkType?: string;
 };
 
 export type Prize = {
