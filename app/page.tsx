@@ -1,65 +1,140 @@
-import Image from "next/image";
+import Link from 'next/link';
+import { Countdown } from '@/components/Countdown';
+import { Snowfall } from '@/components/Snowfall';
+import { getCurrentHackathon } from '@/lib/strapi';
+import { renderRichText } from '@/lib/strapi-utils';
 
-export default function Home() {
+export default async function Home() {
+  const hackathon = await getCurrentHackathon().catch(() => null);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="relative min-h-screen bg-[#0c0c0c]">
+      <Snowfall />
+      <div className="container mx-auto px-4 py-16 relative z-10">
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <div className="mb-8">
+            <span className="font-mono text-white text-6xl">js</span>
+            <span className="text-[#6c255f] text-6xl">{'{'}</span>
+            <span className="font-mono text-white text-6xl">tz</span>
+            <span className="text-[#6c255f] text-6xl">{'}'}</span>
+            <span className="text-white text-6xl"> the season </span>
+            <span className="text-6xl">🌲🧑‍🎄</span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            <span className="text-white">Hackathon</span>{' '}
+            <span className="text-[#6c255f]">2025</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Build the future. Create something amazing. Win prizes. 🎄✨
           </p>
+          
+          {/* jstz.io Button */}
+          <div className="mb-8">
+            <a
+              href="https://jstz.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-[#8aaafc] hover:bg-[#6b8dd9] text-white px-8 py-3 rounded-lg transition-colors font-semibold"
+            >
+              Visit jstz.io →
+            </a>
+          </div>
+          
+          {/* Countdown */}
+          <div className="mb-12 flex justify-center">
+            <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-8">
+              <h2 className="text-2xl mb-4 text-white">Starts in:</h2>
+              <Countdown />
+            </div>
+          </div>
+
+          {/* Christmas decorations */}
+          <div className="flex justify-center gap-4 mb-8">
+            <span className="text-4xl tree">🎄</span>
+            <span className="text-4xl">❄️</span>
+            <span className="text-4xl">🎁</span>
+            <span className="text-4xl tree">🎄</span>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Quick Nav Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          <Link
+            href="/schedule"
+            className="bg-[#121212] border border-[#6c255f] rounded-lg p-6 hover:border-[#8aaafc] transition-all hover:scale-105"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <div className="text-3xl mb-3">📅</div>
+            <h3 className="text-xl font-bold text-white mb-2">Schedule</h3>
+            <p className="text-gray-400 text-sm">View the hackathon timeline</p>
+          </Link>
+
+          <Link
+            href="/ideas"
+            className="bg-[#121212] border border-[#6c255f] rounded-lg p-6 hover:border-white transition-all hover:scale-105"
           >
-            Documentation
-          </a>
+            <div className="text-3xl mb-3">💡</div>
+            <h3 className="text-xl font-bold text-white mb-2">Ideas</h3>
+            <p className="text-gray-400 text-sm">Submit and vote on ideas</p>
+          </Link>
+
+          <Link
+            href="/teams"
+            className="bg-[#121212] border border-[#6c255f] rounded-lg p-6 hover:border-white transition-all hover:scale-105"
+          >
+            <div className="text-3xl mb-3">👥</div>
+            <h3 className="text-xl font-bold text-white mb-2">Teams</h3>
+            <p className="text-gray-400 text-sm">Create or join a team</p>
+          </Link>
+
+          <Link
+            href="/showcase"
+            className="bg-[#121212] border border-[#6c255f] rounded-lg p-6 hover:border-white transition-all hover:scale-105"
+          >
+            <div className="text-3xl mb-3">🏆</div>
+            <h3 className="text-xl font-bold text-white mb-2">Showcase</h3>
+            <p className="text-gray-400 text-sm">View all projects</p>
+          </Link>
         </div>
-      </main>
+
+        {/* Hackathon Info */}
+        {hackathon && (
+          <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-8">
+            <h2 className="text-3xl font-bold text-white mb-4">{hackathon.title}</h2>
+            {hackathon.tagline && (
+              <p className="text-xl text-[#6c255f] mb-6">{hackathon.tagline}</p>
+            )}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Description Column */}
+              <div>
+                <h3 className="text-xl font-bold text-white mb-4">About</h3>
+                {hackathon.description && (
+                  <div className="text-gray-300 prose prose-invert max-w-none">
+                    {Array.isArray(hackathon.description)
+                      ? renderRichText(hackathon.description)
+                      : hackathon.description}
+                  </div>
+                )}
+              </div>
+              
+              {/* Prizes Column */}
+              {hackathon.prizes && hackathon.prizes.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-4">Prizes 🏆</h3>
+                  <div className="space-y-4">
+                    {hackathon.prizes.map((prize) => (
+                      <div key={prize.id || prize.documentId || prize.position} className="bg-[#0c0c0c] border border-[#6c255f] rounded p-4">
+                        <div className="text-sm text-gray-400 mb-1">{prize.position}</div>
+                        <div className="text-xl font-bold text-white">{prize.amount}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
