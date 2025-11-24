@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-const TARGET_DATE = new Date('2025-12-05T14:00:00+00:00'); // 5 Dec 2025 14:00 UK
+const TARGET_DATE = new Date('2025-12-01T00:00:00+00:00'); // 1 Dec 2025 00:00 (midnight) UK (hackathon start)
 
 export function Countdown() {
   const [timeLeft, setTimeLeft] = useState({

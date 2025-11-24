@@ -89,16 +89,6 @@ export function Nav() {
             >
               Showcase
             </Link>
-            <Link 
-              href="/admin" 
-              className={`transition-colors ${
-                isActive('/admin') 
-                  ? 'text-[#8aaafc] font-semibold' 
-                  : 'text-white hover:text-gray-300'
-              }`}
-            >
-              Admin
-            </Link>
             <a
               href="https://jstz.io"
               target="_blank"

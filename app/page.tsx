@@ -26,23 +26,16 @@ export default async function Home() {
             <span className="text-[#6c255f]">2025</span>
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Build the future. Create something amazing. Win prizes. 🎄✨
+            Build the future. Create something amazing. Win prizes 🎄 ❄️ 🎁 🎄 ✨
           </p>
           
           {/* Countdown */}
           <div className="mb-12 flex justify-center">
-            <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-8">
-              <h2 className="text-2xl mb-4 text-white">Starts in:</h2>
+            <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-4">
+              <h2 className="text-xl mb-3 text-white">Starts in:</h2>
               <Countdown />
+              <p className="text-sm text-gray-400 mt-3 text-center">starts Dec. 1, 2025</p>
             </div>
-          </div>
-
-          {/* Christmas decorations */}
-          <div className="flex justify-center gap-4 mb-8">
-            <span className="text-4xl tree">🎄</span>
-            <span className="text-4xl">❄️</span>
-            <span className="text-4xl">🎁</span>
-            <span className="text-4xl tree">🎄</span>
           </div>
         </div>
 

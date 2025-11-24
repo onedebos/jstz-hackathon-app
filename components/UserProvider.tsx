@@ -24,7 +24,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user on mount
+    // Check for stored user on mount (only in browser)
+    if (typeof window === 'undefined') {
+      setLoading(false);
+      return;
+    }
+    
     const storedUserId = localStorage.getItem('jstz_user_id');
     if (storedUserId) {
       loadUser(storedUserId);
@@ -52,7 +57,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error loading user:', error);
-      localStorage.removeItem('jstz_user_id');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('jstz_user_id');
+      }
       setUser(null);
     } finally {
       setLoading(false);
@@ -105,7 +112,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         .eq('id', userData.id);
 
       setUser(userData);
-      localStorage.setItem('jstz_user_id', userData.id);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('jstz_user_id', userData.id);
+      }
     } catch (error: any) {
       if (error.code === '23505') {
         // Unique constraint violation - name already exists
@@ -117,7 +126,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   function logout() {
     setUser(null);
-    localStorage.removeItem('jstz_user_id');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('jstz_user_id');
+    }
   }
 
   return (
