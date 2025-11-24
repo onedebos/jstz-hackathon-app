@@ -262,19 +262,21 @@ export default function IdeasPage() {
               {ideas.map((idea) => (
                 <div
                   key={idea.id}
-                  className="bg-[#121212] border border-[#6c255f] rounded-lg p-6 hover:border-[#8aaafc] transition-all"
+                  className="bg-[#121212] border border-[#6c255f] rounded-lg p-6 hover:border-[#8aaafc] transition-all flex flex-col h-full"
                 >
-                  {idea.is_locked && (
-                    <div className="text-xs bg-[#6c255f] text-white px-2 py-1 rounded mb-2 inline-block">
-                      🔒 Locked
-                    </div>
-                  )}
-                  <h3 className="text-xl font-bold text-white mb-2">{idea.title}</h3>
-                  {idea.author && (
-                    <p className="text-gray-400 text-xs mb-2">by {idea.author.name}</p>
-                  )}
-                  <p className="text-gray-300 mb-4 text-sm">{idea.description}</p>
-                  <div className="flex items-center justify-between">
+                  <div className="shrink-0">
+                    {idea.is_locked && (
+                      <div className="text-xs bg-[#6c255f] text-white px-2 py-1 rounded mb-2 inline-block">
+                        🔒 Locked
+                      </div>
+                    )}
+                    <h3 className="text-xl font-bold text-white mb-2">{idea.title}</h3>
+                    {idea.author && (
+                      <p className="text-gray-400 text-xs mb-2">by {idea.author.name}</p>
+                    )}
+                  </div>
+                  <p className="text-gray-300 mb-4 text-sm grow">{idea.description}</p>
+                  <div className="flex items-center justify-between mt-auto">
                     <button
                       onClick={() => handleVote(idea.id)}
                       className={`flex items-center gap-2 px-4 py-2 rounded transition-colors cursor-pointer ${
@@ -322,14 +324,24 @@ export default function IdeasPage() {
                   className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 mb-4 text-white focus:border-[#8aaafc] focus:outline-none"
                   required
                 />
-                <textarea
-                  placeholder="Describe your idea..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={6}
-                  className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 mb-4 text-white focus:border-[#8aaafc] focus:outline-none"
-                  required
-                />
+                <div className="mb-4">
+                  <textarea
+                    placeholder="Describe your idea..."
+                    value={description}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 460) {
+                        setDescription(e.target.value);
+                      }
+                    }}
+                    rows={6}
+                    maxLength={460}
+                    className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 text-white focus:border-[#8aaafc] focus:outline-none"
+                    required
+                  />
+                  <p className="text-xs text-gray-400 mt-1 text-right">
+                    {description.length}/460 characters
+                  </p>
+                </div>
                 <button
                   type="submit"
                   disabled={submitting}
