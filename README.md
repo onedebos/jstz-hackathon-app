@@ -2,6 +2,10 @@
 
 A complete internal hackathon platform built with Next.js 15, Tailwind CSS, and Supabase.
 
+## About Jstz
+
+**Jstz** (pronounced: "justice") is a JavaScript runtime powered by Tezos Smart Optimistic Rollups that is built in Rust.
+
 ## Features
 
 - 🎄 **Festive Christmas Theme** - Dark mode with subtle snow effects

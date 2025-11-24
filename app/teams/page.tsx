@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useUser } from '@/components/UserProvider';
 import { LoginModal } from '@/components/LoginModal';
 import { createTeam, joinTeam, leaveTeam } from '@/app/actions';
+import { isFeatureOpen } from '@/lib/phases';
 
 interface Team {
   id: string;
@@ -49,11 +50,19 @@ export default function TeamsPage() {
   const [canCreateTeams, setCanCreateTeams] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
+  async function checkCanCreateTeams() {
+    const dateCheck = () => {
+      const now = new Date();
+      const nov28 = new Date('2025-11-28T00:00:00+00:00');
+      return now >= nov28;
+    };
+    const canCreate = await isFeatureOpen('teams_open', dateCheck);
+    setCanCreateTeams(canCreate);
+  }
+
   useEffect(() => {
-    // Check if team creation is allowed (Nov 28, 2025 or later)
-    const now = new Date();
-    const nov28 = new Date('2025-11-28T00:00:00+00:00');
-    setCanCreateTeams(now >= nov28);
+    // Check if team creation is allowed (phase override OR Nov 28, 2025 or later)
+    checkCanCreateTeams();
 
     if (!user) return;
     loadTopIdeas();
@@ -73,6 +82,9 @@ export default function TeamsPage() {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'idea_votes' }, () => {
         loadTopIdeas();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_phases' }, () => {
+        checkCanCreateTeams(); // Re-check when phases change
       })
       .subscribe();
 

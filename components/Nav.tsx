@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
 import { useUser } from './UserProvider';
 import { LoginModal } from './LoginModal';
+import { VideoButton } from './VideoButton';
 
 export function Nav() {
   const pathname = usePathname();
@@ -25,9 +26,12 @@ export function Nav() {
       <nav className="border-b border-gray-800 bg-[#0c0c0c]">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center">
-              <Logo />
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link href="/" className="flex items-center">
+                <Logo />
+              </Link>
+              <VideoButton />
+            </div>
             <div className="flex gap-6 items-center">
               <Link 
               href="/" 
@@ -90,7 +94,7 @@ export function Nav() {
               Showcase
             </Link>
             <a
-              href="https://jstz.io"
+              href="https://jstz.tezos.com/quick_start/"
               target="_blank"
               rel="noopener noreferrer"
               className="transition-colors text-white hover:text-gray-300"

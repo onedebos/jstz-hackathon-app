@@ -6,6 +6,7 @@ import { useUser } from '@/components/UserProvider';
 import { LoginModal } from '@/components/LoginModal';
 import { submitProject } from '@/app/actions';
 import { useRouter } from 'next/navigation';
+import { isFeatureOpen } from '@/lib/phases';
 
 interface Team {
   id: string;
@@ -26,16 +27,36 @@ export default function SubmitPage() {
   const { user, loading } = useUser();
   const router = useRouter();
 
+  async function checkCanSubmit() {
+    const dateCheck = () => {
+      const now = new Date();
+      const dec5 = new Date('2025-12-05T10:00:00');
+      return now >= dec5;
+    };
+    const canSubmit = await isFeatureOpen('submissions_open', dateCheck);
+    setCanSubmit(canSubmit);
+  }
+
   useEffect(() => {
-    // Check if submissions are open (after Dec 5)
-    const now = new Date();
-    const dec5 = new Date('2025-12-05T00:00:00');
-    setCanSubmit(now >= dec5);
+    // Check if submissions are open (phase override OR after Dec 5 at 10am)
+    checkCanSubmit();
 
     // Load user's teams
     if (user) {
       loadUserTeams();
     }
+
+    // Subscribe to phase changes
+    const channel = supabase
+      .channel('submit-phase-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_phases' }, () => {
+        checkCanSubmit(); // Re-check when phases change
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   async function loadUserTeams() {
@@ -100,7 +121,7 @@ export default function SubmitPage() {
                 Submissions Not Open Yet
               </h1>
               <p className="text-gray-300 text-lg">
-                Completed Hackathon Project submissions will open on Friday, December 5, 2025. 🎄
+                You can begin submitting your completed hackathon projects from Friday, December 5, 2025. by 10am.
               </p>
             </div>
           </div>

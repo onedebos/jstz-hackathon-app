@@ -145,6 +145,10 @@ export async function togglePhase(phaseName: string, isOpen: boolean) {
 
   if (error) throw error;
   revalidatePath('/admin');
+  revalidatePath('/ideas');
+  revalidatePath('/teams');
+  revalidatePath('/submit');
+  revalidatePath('/showcase');
 }
 
 export async function lockIdea(ideaId: string) {

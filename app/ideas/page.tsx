@@ -6,6 +6,7 @@ import { useUser } from '@/components/UserProvider';
 import { LoginModal } from '@/components/LoginModal';
 import { submitIdea, voteIdea, unvoteIdea } from '@/app/actions';
 import Counter from '@/components/AnimatedCounter';
+import { isFeatureOpen } from '@/lib/phases';
 
 interface Idea {
   id: string;
@@ -31,8 +32,19 @@ export default function IdeasPage() {
   const [votedIdeas, setVotedIdeas] = useState<Set<string>>(new Set());
   const [userVoteCounts, setUserVoteCounts] = useState<Map<string, number>>(new Map());
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [canSubmitIdeas, setCanSubmitIdeas] = useState(true);
+  const [canVote, setCanVote] = useState(true);
 
   useEffect(() => {
+    // Check phase states
+    async function checkPhases() {
+      const canSubmit = await isFeatureOpen('ideas_open', () => true);
+      const canVoteOnIdeas = await isFeatureOpen('ideas_voting', () => true);
+      setCanSubmitIdeas(canSubmit);
+      setCanVote(canVoteOnIdeas);
+    }
+    checkPhases();
+
     if (!user) return;
     loadIdeas();
     loadVotes();
@@ -46,6 +58,9 @@ export default function IdeasPage() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'idea_votes' }, () => {
         loadIdeas();
         loadVotes();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_phases' }, () => {
+        checkPhases(); // Re-check phases when they change
       })
       .subscribe();
 
@@ -109,6 +124,10 @@ export default function IdeasPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title || !description || !user) return;
+    if (!canSubmitIdeas) {
+      alert('Idea submissions are currently closed.');
+      return;
+    }
     
     setSubmitting(true);
     try {
@@ -128,6 +147,10 @@ export default function IdeasPage() {
 
   async function handleVote(ideaId: string) {
     if (!user) return;
+    if (!canVote) {
+      alert('Voting on ideas is currently closed.');
+      return;
+    }
     const currentVoteCount = userVoteCounts.get(ideaId) || 0;
     
     // Optimistically update the UI immediately for smooth animation

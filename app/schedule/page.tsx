@@ -1,8 +1,36 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { getCurrentHackathon, type ScheduleItem } from '@/lib/strapi';
 
-export default async function SchedulePage() {
-  const hackathon = await getCurrentHackathon();
-  const scheduleItems: ScheduleItem[] = hackathon?.schedule_items || [];
+export default function SchedulePage() {
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
+  const [today, setToday] = useState<Date>(new Date());
+
+  useEffect(() => {
+    // Update today's date periodically to handle day changes
+    const interval = setInterval(() => {
+      setToday(new Date());
+    }, 60000); // Update every minute
+
+    // Load schedule
+    getCurrentHackathon().then((hackathon) => {
+      if (hackathon?.schedule_items) {
+        setScheduleItems(hackathon.schedule_items);
+      }
+    });
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Check if an item is for today
+  function isToday(item: ScheduleItem): boolean {
+    if (!item.date) return false;
+    const itemDate = new Date(item.date);
+    const todayStr = today.toDateString();
+    const itemDateStr = itemDate.toDateString();
+    return todayStr === itemDateStr;
+  }
 
   return (
     <div className="min-h-screen bg-[#0c0c0c] py-16">
@@ -27,19 +55,31 @@ export default async function SchedulePage() {
                   <div className="absolute left-6 w-4 h-4 bg-[#8aaafc] rounded-full border-2 border-[#0c0c0c]"></div>
 
                   {/* Content card */}
-                  <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-6 hover:border-[#8aaafc] transition-all">
+                  <div className={`border rounded-lg p-6 hover:border-[#8aaafc] transition-all ${
+                    isToday(item)
+                      ? 'bg-[#6c255f] border-[#8aaafc]'
+                      : 'bg-[#121212] border-[#6c255f]'
+                  }`}>
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="text-2xl font-bold text-white">
                         {item.title}
                       </h3>
                       <div className="text-right">
                         {item.date && (
-                          <div className="text-sm text-gray-400 bg-[#0c0c0c] px-3 py-1 rounded mb-1">
+                          <div className={`text-sm px-3 py-1 rounded mb-1 ${
+                            isToday(item)
+                              ? 'text-white bg-[#8a3a7a]'
+                              : 'text-gray-400 bg-[#0c0c0c]'
+                          }`}>
                             📅 {new Date(item.date).toLocaleDateString()}
                           </div>
                         )}
                         {item.time && (
-                          <div className="text-sm text-gray-400 bg-[#0c0c0c] px-3 py-1 rounded">
+                          <div className={`text-sm px-3 py-1 rounded ${
+                            isToday(item)
+                              ? 'text-white bg-[#8a3a7a]'
+                              : 'text-gray-400 bg-[#0c0c0c]'
+                          }`}>
                             🕐 {item.time}
                           </div>
                         )}
