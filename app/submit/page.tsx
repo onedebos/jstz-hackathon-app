@@ -27,10 +27,10 @@ export default function SubmitPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if submissions are open (after Dec 1)
+    // Check if submissions are open (after Dec 5)
     const now = new Date();
-    const dec1 = new Date('2025-12-01T00:00:00');
-    setCanSubmit(now >= dec1);
+    const dec5 = new Date('2025-12-05T00:00:00');
+    setCanSubmit(now >= dec5);
 
     // Load user's teams
     if (user) {
@@ -100,7 +100,7 @@ export default function SubmitPage() {
                 Submissions Not Open Yet
               </h1>
               <p className="text-gray-300 text-lg">
-                Completed Hackathon Project submissions will open on December 1, 2025. 🎄
+                Completed Hackathon Project submissions will open on Friday, December 5, 2025. 🎄
               </p>
             </div>
           </div>
