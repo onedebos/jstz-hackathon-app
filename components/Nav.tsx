@@ -105,10 +105,10 @@ export function Nav() {
                 <div className="relative">
                   <button
                     onClick={() => setShowDropdown(!showDropdown)}
-                    className="flex items-center gap-2 text-white hover:text-[#8aaafc] transition-colors"
+                    className="flex items-center gap-2 text-white hover:text-[#8aaafc] transition-colors max-w-[200px]"
                   >
-                    <span className="text-sm">{user.name}</span>
-                    <span className="text-xs">▼</span>
+                    <span className="text-sm truncate">{user.name}</span>
+                    <span className="text-xs flex-shrink-0">▼</span>
                   </button>
                   {showDropdown && (
                     <>
