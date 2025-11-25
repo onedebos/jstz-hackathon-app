@@ -1,4 +1,4 @@
-# {jstz} Hackathon Platform
+# {Jstz} Hackathon Platform
 
 A complete internal hackathon platform built with Next.js 15, Tailwind CSS, and Supabase.
 
@@ -84,7 +84,7 @@ app/
   └── admin/            # Admin panel
 
 components/
-  ├── Logo.tsx          # {jstz} logo component
+  ├── Logo.tsx          # {Jstz} logo component
   ├── Countdown.tsx     # Countdown to hackathon start
   ├── Snowfall.tsx      # Animated snow effect
   └── Nav.tsx           # Navigation bar
@@ -101,7 +101,7 @@ supabase-schema.sql     # Database schema
 ## Branding
 
 - **Colors**: Purple `#6c255f`, Blue `#8aaafc`, Dark backgrounds `#0c0c0c` / `#121212`
-- **Logo**: `{jstz}` with curly braces in purple and "jstz" in monospace blue
+- **Logo**: `{Jstz}` with curly braces in purple and "Jstz" in monospace blue
 - **Theme**: Dark mode only with festive Christmas accents
 
 ## Deployment

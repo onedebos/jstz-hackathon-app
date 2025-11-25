@@ -43,7 +43,7 @@ const gtEesti = localFont({
 
 export const metadata: Metadata = {
   title: "🎁 'Js{tz} the Season! 🌲🧑‍🎄",
-  description: "jstz Hackathon 2025 - js{tz} the season!",
+  description: "Jstz Hackathon 2025 - js{tz} the season!",
   icons: {
     icon: '/favicon.ico',
   },
