@@ -10,7 +10,7 @@ export function IdeaCardLoader({ count = 6 }: { count?: number }) {
       transition: {
         repeat: Infinity,
         duration: 1.5,
-        ease: 'linear',
+        ease: 'linear' as const,
       },
     },
   };
