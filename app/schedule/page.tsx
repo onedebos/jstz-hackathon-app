@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { getCurrentHackathon, type ScheduleItem } from '@/lib/strapi';
+import { ScheduleLoader } from '@/components/ScheduleLoader';
 
 export default function SchedulePage() {
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [today, setToday] = useState<Date>(new Date());
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Update today's date periodically to handle day changes
@@ -18,6 +20,7 @@ export default function SchedulePage() {
       if (hackathon?.schedule_items) {
         setScheduleItems(hackathon.schedule_items);
       }
+      setLoading(false);
     });
 
     return () => clearInterval(interval);
@@ -30,6 +33,10 @@ export default function SchedulePage() {
     const todayStr = today.toDateString();
     const itemDateStr = itemDate.toDateString();
     return todayStr === itemDateStr;
+  }
+
+  if (loading) {
+    return <ScheduleLoader />;
   }
 
   return (

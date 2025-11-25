@@ -7,6 +7,8 @@ import { LoginModal } from '@/components/LoginModal';
 import { submitIdea, voteIdea, unvoteIdea } from '@/app/actions';
 import Counter from '@/components/AnimatedCounter';
 import { isFeatureOpen } from '@/lib/phases';
+import { IdeasLoader } from '@/components/IdeasLoader';
+import { IdeaCardLoader } from '@/components/IdeaCardLoader';
 
 interface Idea {
   id: string;
@@ -26,6 +28,7 @@ export default function IdeasPage() {
   const { user, loading } = useUser();
   const [activeTab, setActiveTab] = useState<'ideas' | 'create'>('ideas');
   const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [loadingIdeas, setLoadingIdeas] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -70,6 +73,7 @@ export default function IdeasPage() {
   }, [user]);
 
   async function loadIdeas() {
+    setLoadingIdeas(true);
     const { data } = await supabase
       .from('ideas')
       .select('*')
@@ -100,6 +104,7 @@ export default function IdeasPage() {
       
       setIdeas(ideasWithAuthors);
     }
+    setLoadingIdeas(false);
   }
 
   async function loadVotes() {
@@ -201,11 +206,7 @@ export default function IdeasPage() {
   }, [user, loading]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0c0c0c] py-16 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
+    return <IdeasLoader />;
   }
 
   return (
@@ -258,8 +259,11 @@ export default function IdeasPage() {
           {/* Ideas Tab Content */}
           {activeTab === 'ideas' && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {ideas.map((idea) => (
+            {loadingIdeas ? (
+              <IdeaCardLoader count={6} />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {ideas.map((idea) => (
                 <div
                   key={idea.id}
                   className="bg-[#121212] border border-[#6c255f] rounded-lg p-6 hover:border-[#8aaafc] transition-all flex flex-col h-full"
@@ -300,12 +304,13 @@ export default function IdeasPage() {
                   </div>
                 </div>
               ))}
+              
+              {ideas.length === 0 && (
+                <div className="text-center text-gray-400 mt-12 col-span-full">
+                  <p className="text-xl">No ideas yet. Be the first! 🎄</p>
+                </div>
+              )}
             </div>
-
-            {ideas.length === 0 && (
-              <div className="text-center text-gray-400 mt-12">
-                <p className="text-xl">No ideas yet. Be the first! 🎄</p>
-              </div>
             )}
           </>
         )}
