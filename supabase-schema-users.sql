@@ -53,5 +53,6 @@ CREATE INDEX IF NOT EXISTS idx_users_name ON users(name);
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- Policy to allow all operations on users
-CREATE POLICY "Allow all on users" ON users FOR ALL USING (true);
+-- Note: WITH CHECK (true) is required for INSERT operations to work with RLS enabled
+CREATE POLICY "Allow all on users" ON users FOR ALL USING (true) WITH CHECK (true);
 

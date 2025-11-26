@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { togglePhase, lockIdea, setJudgesScore, revealWinners } from '@/app/actions';
+import { togglePhase, lockIdea, deleteIdea, setJudgesScore, revealWinners } from '@/app/actions';
 
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
@@ -90,13 +90,30 @@ export default function AdminPage() {
   }
 
   async function handleTogglePhase(phaseName: string, currentValue: boolean) {
-    await togglePhase(phaseName, !currentValue);
-    await loadPhases();
+    try {
+      await togglePhase(phaseName, !currentValue);
+      await loadPhases();
+    } catch (error) {
+      console.error('Error toggling phase:', error);
+      alert('Failed to toggle phase. Check console for details.');
+    }
   }
 
   async function handleLockIdea(ideaId: string) {
     await lockIdea(ideaId);
     await loadIdeas();
+  }
+
+  async function handleDeleteIdea(ideaId: string) {
+    if (confirm('Are you sure you want to delete this idea? This action cannot be undone.')) {
+      try {
+        await deleteIdea(ideaId);
+        await loadIdeas();
+      } catch (error) {
+        console.error('Error deleting idea:', error);
+        alert('Failed to delete idea. Check console for details.');
+      }
+    }
   }
 
   async function handleSetScore(projectId: string, score: string) {
@@ -224,14 +241,22 @@ export default function AdminPage() {
                     </span>
                   )}
                 </div>
-                {!idea.is_locked && (
+                <div className="flex gap-2">
+                  {!idea.is_locked && (
+                    <button
+                      onClick={() => handleLockIdea(idea.id)}
+                      className="bg-[#6c255f] hover:bg-[#8a3a7a] text-white px-4 py-1 rounded text-sm"
+                    >
+                      Lock
+                    </button>
+                  )}
                   <button
-                    onClick={() => handleLockIdea(idea.id)}
-                    className="bg-[#6c255f] hover:bg-[#8a3a7a] text-white px-4 py-1 rounded text-sm"
+                    onClick={() => handleDeleteIdea(idea.id)}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded text-sm"
                   >
-                    Lock
+                    Delete
                   </button>
-                )}
+                </div>
               </div>
             ))}
           </div>

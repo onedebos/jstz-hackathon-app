@@ -1,7 +1,10 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
+
+// Use supabaseAdmin for server actions (bypasses RLS)
+const supabase = supabaseAdmin;
 
 // Ideas
 export async function submitIdea(title: string, description: string, userId: string) {
@@ -141,7 +144,8 @@ export async function unvoteShowcase(projectId: string, userId: string) {
 export async function togglePhase(phaseName: string, isOpen: boolean) {
   const { error } = await supabase
     .from('admin_phases')
-    .upsert({ phase_name: phaseName, is_open: isOpen, updated_at: new Date().toISOString() });
+    .update({ is_open: isOpen, updated_at: new Date().toISOString() })
+    .eq('phase_name', phaseName);
 
   if (error) throw error;
   revalidatePath('/admin');
@@ -155,6 +159,17 @@ export async function lockIdea(ideaId: string) {
   const { error } = await supabase
     .from('ideas')
     .update({ is_locked: true })
+    .eq('id', ideaId);
+
+  if (error) throw error;
+  revalidatePath('/admin');
+  revalidatePath('/ideas');
+}
+
+export async function deleteIdea(ideaId: string) {
+  const { error } = await supabase
+    .from('ideas')
+    .delete()
     .eq('id', ideaId);
 
   if (error) throw error;

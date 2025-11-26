@@ -135,10 +135,11 @@ ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE showcase_votes ENABLE ROW LEVEL SECURITY;
 
 -- Policies to allow all operations (since we're using localStorage UUIDs)
-CREATE POLICY "Allow all on ideas" ON ideas FOR ALL USING (true);
-CREATE POLICY "Allow all on idea_votes" ON idea_votes FOR ALL USING (true);
-CREATE POLICY "Allow all on teams" ON teams FOR ALL USING (true);
-CREATE POLICY "Allow all on team_members" ON team_members FOR ALL USING (true);
-CREATE POLICY "Allow all on projects" ON projects FOR ALL USING (true);
-CREATE POLICY "Allow all on showcase_votes" ON showcase_votes FOR ALL USING (true);
+-- Note: WITH CHECK (true) is required for INSERT operations to work with RLS enabled
+CREATE POLICY "Allow all on ideas" ON ideas FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on idea_votes" ON idea_votes FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on teams" ON teams FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on team_members" ON team_members FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on projects" ON projects FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on showcase_votes" ON showcase_votes FOR ALL USING (true) WITH CHECK (true);
 
