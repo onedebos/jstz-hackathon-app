@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/components/UserProvider';
 import { LoginModal } from '@/components/LoginModal';
-import { submitProject } from '@/app/actions';
+import { submitProject, submitFeedback } from '@/app/actions';
 import { useRouter } from 'next/navigation';
 import { isFeatureOpen } from '@/lib/phases';
 
@@ -24,6 +24,10 @@ export default function SubmitPage() {
   const [track, setTrack] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
+  // Feedback fields
+  const [feedbackCategory, setFeedbackCategory] = useState('');
+  const [feedbackDescription, setFeedbackDescription] = useState('');
+  const [feedbackSeverity, setFeedbackSeverity] = useState('');
   const { user, loading } = useUser();
   const router = useRouter();
 
@@ -78,11 +82,23 @@ export default function SubmitPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title || !description || !selectedTeam) return;
+    if (!title || !description || !selectedTeam || !user) return;
 
     setSubmitting(true);
     try {
-      await submitProject(selectedTeam, title, description, repoUrl, demoUrl, videoUrl, track);
+      const project = await submitProject(selectedTeam, title, description, repoUrl, demoUrl, videoUrl, track);
+      
+      // Submit feedback if provided
+      if (feedbackCategory && feedbackDescription) {
+        await submitFeedback(
+          user.id,
+          feedbackCategory,
+          feedbackDescription,
+          feedbackSeverity || null,
+          project.id
+        );
+      }
+      
       router.push('/showcase');
     } catch (error) {
       console.error('Error submitting project:', error);
@@ -246,6 +262,62 @@ export default function SubmitPage() {
                     placeholder="e.g., AI, DeFi, Infrastructure..."
                     className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 text-white focus:border-[#8aaafc] focus:outline-none"
                   />
+                </div>
+
+                {/* Feedback Section */}
+                <div className="border-t border-gray-700 pt-6 mt-6">
+                  <h3 className="text-xl font-bold text-white mb-4">
+                    📝 Feedback for jstz Team <span className="text-gray-400 text-sm font-normal">(optional)</span>
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Help us improve jstz! Share your experience building with it.
+                  </p>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-white font-bold mb-2">Category</label>
+                      <select
+                        value={feedbackCategory}
+                        onChange={(e) => setFeedbackCategory(e.target.value)}
+                        className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 text-white focus:border-[#8aaafc] focus:outline-none"
+                      >
+                        <option value="">Select a category...</option>
+                        <option value="docs">📚 Documentation</option>
+                        <option value="apis">🔌 APIs</option>
+                        <option value="tooling">🛠️ Tooling</option>
+                        <option value="dx">✨ Developer Experience</option>
+                        <option value="bugs">🐛 Bugs</option>
+                        <option value="feature_request">💡 Feature Request</option>
+                        <option value="other">📋 Other</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-white font-bold mb-2">What would you like to share?</label>
+                      <textarea
+                        value={feedbackDescription}
+                        onChange={(e) => setFeedbackDescription(e.target.value)}
+                        rows={4}
+                        placeholder="What was challenging? What could be improved? Any feature requests?"
+                        className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 text-white focus:border-[#8aaafc] focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-white font-bold mb-2">Severity</label>
+                      <select
+                        value={feedbackSeverity}
+                        onChange={(e) => setFeedbackSeverity(e.target.value)}
+                        className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 text-white focus:border-[#8aaafc] focus:outline-none"
+                      >
+                        <option value="">Select severity...</option>
+                        <option value="low">🟢 Low - Minor improvement</option>
+                        <option value="medium">🟡 Medium - Would be nice to fix</option>
+                        <option value="high">🟠 High - Significant friction</option>
+                        <option value="critical">🔴 Critical - Blocked progress</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
 
                 <button

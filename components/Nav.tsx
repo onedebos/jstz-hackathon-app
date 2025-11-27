@@ -30,6 +30,7 @@ export function Nav() {
     { href: '/teams', label: 'Teams' },
     { href: '/submit', label: 'Submit' },
     { href: '/showcase', label: 'Showcase' },
+    { href: '/feedback', label: 'Feedback' },
   ];
 
   return (
@@ -73,7 +74,7 @@ export function Nav() {
                     className="flex items-center gap-2 text-white hover:text-[#8aaafc] transition-colors max-w-[200px]"
                   >
                     <span className="text-sm truncate">{user.name}</span>
-                    <span className="text-xs flex-shrink-0">▼</span>
+                    <span className="text-xs shrink-0">▼</span>
                   </button>
                   {showDropdown && (
                     <>

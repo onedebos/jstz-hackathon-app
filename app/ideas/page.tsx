@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/components/UserProvider';
 import { LoginModal } from '@/components/LoginModal';
-import { submitIdea, voteIdea, unvoteIdea } from '@/app/actions';
+import { submitIdea, setUserVoteCount } from '@/app/actions';
 import Counter from '@/components/AnimatedCounter';
 import { isFeatureOpen } from '@/lib/phases';
 import { IdeasLoader } from '@/components/IdeasLoader';
@@ -24,6 +24,8 @@ interface Idea {
   };
 }
 
+const DEBOUNCE_DELAY = 500; // ms to wait before syncing votes
+
 export default function IdeasPage() {
   const { user, loading } = useUser();
   const [activeTab, setActiveTab] = useState<'ideas' | 'create'>('ideas');
@@ -37,6 +39,13 @@ export default function IdeasPage() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [canSubmitIdeas, setCanSubmitIdeas] = useState(true);
   const [canVote, setCanVote] = useState(true);
+  
+  // Track pending votes for debouncing (ideaId -> target vote count)
+  const pendingVotesRef = useRef<Map<string, number>>(new Map());
+  // Track debounce timers per idea
+  const debounceTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  // Track which ideas are currently syncing
+  const [syncingIdeas, setSyncingIdeas] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     // Check phase states
@@ -71,6 +80,14 @@ export default function IdeasPage() {
       supabase.removeChannel(channel);
     };
   }, [user]);
+
+  // Cleanup debounce timers on unmount
+  useEffect(() => {
+    return () => {
+      debounceTimersRef.current.forEach(timer => clearTimeout(timer));
+      debounceTimersRef.current.clear();
+    };
+  }, []);
 
   async function loadIdeas() {
     setLoadingIdeas(true);
@@ -150,51 +167,99 @@ export default function IdeasPage() {
     }
   }
 
-  async function handleVote(ideaId: string) {
+  // Sync votes to server for a specific idea
+  const syncVotesToServer = useCallback(async (ideaId: string, targetCount: number) => {
+    if (!user) return;
+    
+    setSyncingIdeas(prev => new Set(prev).add(ideaId));
+    
+    try {
+      await setUserVoteCount(ideaId, user.id, targetCount);
+      // Clean up pending vote after successful sync
+      pendingVotesRef.current.delete(ideaId);
+      // Sync with server to get accurate counts
+      await Promise.all([loadIdeas(), loadVotes()]);
+    } catch (error) {
+      console.error('Error syncing votes:', error);
+      // Revert to server state on error
+      await Promise.all([loadIdeas(), loadVotes()]);
+    } finally {
+      setSyncingIdeas(prev => {
+        const next = new Set(prev);
+        next.delete(ideaId);
+        return next;
+      });
+    }
+  }, [user]);
+
+  function handleVote(ideaId: string) {
     if (!user) return;
     if (!canVote) {
       alert('Voting on ideas is currently closed.');
       return;
     }
-    const currentVoteCount = userVoteCounts.get(ideaId) || 0;
     
-    // Optimistically update the UI immediately for smooth animation
+    // Get current vote count (use pending if exists, otherwise use actual)
+    const currentVoteCount = pendingVotesRef.current.has(ideaId)
+      ? pendingVotesRef.current.get(ideaId)!
+      : (userVoteCounts.get(ideaId) || 0);
+    
+    // Calculate new vote count
+    const newVoteCount = currentVoteCount >= 5 
+      ? currentVoteCount - 1 
+      : currentVoteCount + 1;
+    
+    // Store pending vote
+    pendingVotesRef.current.set(ideaId, newVoteCount);
+    
+    // Optimistically update the UI immediately
     setIdeas(prevIdeas => 
       prevIdeas.map(idea => {
         if (idea.id === ideaId) {
+          const voteDiff = newVoteCount - currentVoteCount;
           return {
             ...idea,
-            vote_count: currentVoteCount >= 5 
-              ? Math.max(0, idea.vote_count - 1)
-              : idea.vote_count + 1
+            vote_count: Math.max(0, idea.vote_count + voteDiff)
           };
         }
         return idea;
       })
     );
     
-    // Update vote counts optimistically
-    if (currentVoteCount >= 5) {
-      setUserVoteCounts(prev => {
-        const newMap = new Map(prev);
-        newMap.set(ideaId, currentVoteCount - 1);
-        return newMap;
-      });
-      await unvoteIdea(ideaId, user.id);
+    // Update user vote count display optimistically
+    setUserVoteCounts(prev => {
+      const newMap = new Map(prev);
+      newMap.set(ideaId, newVoteCount);
+      return newMap;
+    });
+    
+    // Update voted ideas set
+    if (newVoteCount > 0) {
+      setVotedIdeas(prev => new Set(prev).add(ideaId));
     } else {
-      setUserVoteCounts(prev => {
-        const newMap = new Map(prev);
-        newMap.set(ideaId, currentVoteCount + 1);
-        return newMap;
+      setVotedIdeas(prev => {
+        const next = new Set(prev);
+        next.delete(ideaId);
+        return next;
       });
-      await voteIdea(ideaId, user.id);
     }
     
-    // Sync with server after a short delay to allow animation to play
-    setTimeout(() => {
-      loadIdeas();
-      loadVotes();
-    }, 300);
+    // Clear existing timer for this idea
+    const existingTimer = debounceTimersRef.current.get(ideaId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+    
+    // Set new debounce timer
+    const timer = setTimeout(() => {
+      const targetCount = pendingVotesRef.current.get(ideaId);
+      if (targetCount !== undefined) {
+        syncVotesToServer(ideaId, targetCount);
+      }
+      debounceTimersRef.current.delete(ideaId);
+    }, DEBOUNCE_DELAY);
+    
+    debounceTimersRef.current.set(ideaId, timer);
   }
 
   useEffect(() => {

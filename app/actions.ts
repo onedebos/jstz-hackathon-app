@@ -52,6 +52,44 @@ export async function unvoteIdea(ideaId: string, userId: string) {
   revalidatePath('/ideas');
 }
 
+export async function setUserVoteCount(ideaId: string, userId: string, targetCount: number) {
+  // Clamp target between 0 and 5
+  const clampedTarget = Math.max(0, Math.min(5, targetCount));
+  
+  // Get current vote count for this user on this idea
+  const { data: currentVotes, error: countError } = await supabase
+    .from('idea_votes')
+    .select('id')
+    .eq('idea_id', ideaId)
+    .eq('voter_id', userId);
+
+  if (countError) throw countError;
+
+  const currentCount = currentVotes?.length || 0;
+  const diff = clampedTarget - currentCount;
+
+  if (diff > 0) {
+    // Add votes
+    const votesToAdd = Array.from({ length: diff }, () => ({
+      idea_id: ideaId,
+      voter_id: userId,
+    }));
+    const { error } = await supabase.from('idea_votes').insert(votesToAdd);
+    if (error) throw error;
+  } else if (diff < 0) {
+    // Remove votes (most recent first)
+    const votesToRemove = currentVotes!.slice(0, Math.abs(diff)).map(v => v.id);
+    const { error } = await supabase
+      .from('idea_votes')
+      .delete()
+      .in('id', votesToRemove);
+    if (error) throw error;
+  }
+
+  revalidatePath('/ideas');
+  return { currentCount: clampedTarget };
+}
+
 // Teams
 export async function createTeam(name: string, description: string, userId: string, ideaId: string) {
   const { data, error } = await supabase
@@ -138,6 +176,41 @@ export async function unvoteShowcase(projectId: string, userId: string) {
 
   if (error) throw error;
   revalidatePath('/showcase');
+}
+
+// Feedback
+export async function submitFeedback(
+  userId: string,
+  category: string,
+  description: string,
+  severity: string | null,
+  projectId: string | null = null
+) {
+  const { data, error } = await supabase
+    .from('feedback')
+    .insert({
+      user_id: userId,
+      project_id: projectId,
+      category,
+      description,
+      severity,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  revalidatePath('/admin');
+  return data;
+}
+
+export async function deleteFeedback(feedbackId: string) {
+  const { error } = await supabase
+    .from('feedback')
+    .delete()
+    .eq('id', feedbackId);
+
+  if (error) throw error;
+  revalidatePath('/admin');
 }
 
 // Admin

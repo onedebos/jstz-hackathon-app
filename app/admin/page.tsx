@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { togglePhase, lockIdea, deleteIdea, setJudgesScore, revealWinners } from '@/app/actions';
+import { togglePhase, lockIdea, deleteIdea, setJudgesScore, revealWinners, deleteFeedback } from '@/app/actions';
 
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
@@ -25,6 +25,18 @@ interface Project {
   showcase_vote_count: number;
 }
 
+interface Feedback {
+  id: string;
+  user_id: string;
+  project_id: string | null;
+  category: string;
+  description: string;
+  severity: string | null;
+  created_at: string;
+  user?: { name: string };
+  project?: { title: string };
+}
+
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -33,12 +45,14 @@ export default function AdminPage() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [judgeScores, setJudgeScores] = useState<Record<string, string>>({});
+  const [feedback, setFeedback] = useState<Feedback[]>([]);
 
   useEffect(() => {
     if (authenticated) {
       loadPhases();
       loadIdeas();
       loadProjects();
+      loadFeedback();
     }
   }, [authenticated]);
 
@@ -89,6 +103,45 @@ export default function AdminPage() {
     }
   }
 
+  async function loadFeedback() {
+    const { data } = await supabase
+      .from('feedback')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (data) {
+      // Load user names and project titles
+      const feedbackWithDetails = await Promise.all(
+        data.map(async (fb) => {
+          let user = undefined;
+          let project = undefined;
+          
+          if (fb.user_id) {
+            const { data: userData } = await supabase
+              .from('users')
+              .select('name')
+              .eq('id', fb.user_id)
+              .single();
+            user = userData || undefined;
+          }
+          
+          if (fb.project_id) {
+            const { data: projectData } = await supabase
+              .from('projects')
+              .select('title')
+              .eq('id', fb.project_id)
+              .single();
+            project = projectData || undefined;
+          }
+          
+          return { ...fb, user, project };
+        })
+      );
+      
+      setFeedback(feedbackWithDetails);
+    }
+  }
+
   async function handleTogglePhase(phaseName: string, currentValue: boolean) {
     try {
       await togglePhase(phaseName, !currentValue);
@@ -131,6 +184,47 @@ export default function AdminPage() {
       alert('Winners revealed!');
     }
   }
+
+  async function handleDeleteFeedback(feedbackId: string) {
+    if (confirm('Are you sure you want to delete this feedback?')) {
+      try {
+        await deleteFeedback(feedbackId);
+        await loadFeedback();
+      } catch (error) {
+        console.error('Error deleting feedback:', error);
+        alert('Failed to delete feedback.');
+      }
+    }
+  }
+
+  const getCategoryLabel = (category: string) => {
+    const labels: Record<string, string> = {
+      docs: '📚 Documentation',
+      apis: '🔌 APIs',
+      tooling: '🛠️ Tooling',
+      dx: '✨ Developer Experience',
+      bugs: '🐛 Bugs',
+      feature_request: '💡 Feature Request',
+      other: '📋 Other',
+    };
+    return labels[category] || category;
+  };
+
+  const getSeverityBadge = (severity: string | null) => {
+    if (!severity) return null;
+    const badges: Record<string, { color: string; label: string }> = {
+      low: { color: 'bg-green-600', label: '🟢 Low' },
+      medium: { color: 'bg-yellow-600', label: '🟡 Medium' },
+      high: { color: 'bg-orange-600', label: '🟠 High' },
+      critical: { color: 'bg-red-600', label: '🔴 Critical' },
+    };
+    const badge = badges[severity];
+    return badge ? (
+      <span className={`${badge.color} text-white text-xs px-2 py-1 rounded`}>
+        {badge.label}
+      </span>
+    ) : null;
+  };
 
   if (!authenticated) {
     return (
@@ -291,6 +385,52 @@ export default function AdminPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Feedback */}
+        <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-6 mb-8">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            Feedback ({feedback.length})
+          </h2>
+          {feedback.length === 0 ? (
+            <p className="text-gray-400">No feedback submitted yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {feedback.map((fb) => (
+                <div
+                  key={fb.id}
+                  className="bg-[#0c0c0c] p-4 rounded-lg border border-gray-800"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className="text-sm bg-[#6c255f] text-white px-2 py-1 rounded">
+                          {getCategoryLabel(fb.category)}
+                        </span>
+                        {getSeverityBadge(fb.severity)}
+                        {fb.project && (
+                          <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
+                            📦 {fb.project.title}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-300 mb-2">{fb.description}</p>
+                      <div className="text-xs text-gray-500">
+                        {fb.user?.name && <span>By {fb.user.name} • </span>}
+                        {new Date(fb.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteFeedback(fb.id)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm shrink-0"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Reveal Winners */}
