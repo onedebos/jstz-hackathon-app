@@ -35,6 +35,10 @@ interface TeamMember {
   team_id: string;
   user_id: string;
   joined_at: string;
+  user?: {
+    id: string;
+    name: string;
+  };
 }
 
 export default function TeamsPage() {
@@ -113,19 +117,60 @@ export default function TeamsPage() {
       .order('created_at', { ascending: false });
 
     if (teamsData) {
-      // Load members and ideas for each team
+      // Load all members first
+      const allMembers = await Promise.all(
+        teamsData.map(async (team) => {
+          const { data } = await supabase
+            .from('team_members')
+            .select('*')
+            .eq('team_id', team.id);
+          return { teamId: team.id, members: data || [] };
+        })
+      );
+
+      // Collect all unique user IDs
+      const allUserIds = new Set<string>();
+      allMembers.forEach(({ members }) => {
+        members.forEach((member: TeamMember) => {
+          if (member.user_id) {
+            allUserIds.add(member.user_id);
+          }
+        });
+      });
+
+      // Fetch all users in one query
+      const userIdsArray = Array.from(allUserIds);
+      const usersMap = new Map<string, { id: string; name: string }>();
+      
+      if (userIdsArray.length > 0) {
+        const { data: usersData } = await supabase
+          .from('users')
+          .select('id, name')
+          .in('id', userIdsArray);
+        
+        if (usersData) {
+          usersData.forEach((user) => {
+            usersMap.set(user.id, user);
+          });
+        }
+      }
+
+      // Load ideas and combine with members
       const teamsWithMembers = await Promise.all(
         teamsData.map(async (team) => {
-          const [membersResult, ideaResult] = await Promise.all([
-            supabase.from('team_members').select('*').eq('team_id', team.id),
-            team.idea_id 
-              ? supabase.from('ideas').select('id, title, vote_count').eq('id', team.idea_id).single()
-              : Promise.resolve({ data: null })
-          ]);
-          
+          const teamMembers = allMembers.find(m => m.teamId === team.id)?.members || [];
+          const membersWithUsers = teamMembers.map((member: TeamMember) => ({
+            ...member,
+            user: usersMap.get(member.user_id) || undefined
+          }));
+
+          const ideaResult = team.idea_id 
+            ? await supabase.from('ideas').select('id, title, vote_count').eq('id', team.idea_id).single()
+            : { data: null };
+
           return { 
             ...team, 
-            members: membersResult.data || [],
+            members: membersWithUsers,
             idea: ideaResult.data || undefined
           };
         })
@@ -334,10 +379,18 @@ export default function TeamsPage() {
             const isLeader = team.leader_id === user.id;
             const isFull = memberCount >= team.max_members;
 
+            // Extract first names from member names
+            const firstNames = (team.members || [])
+              .filter(m => m.user?.name)
+              .map(m => {
+                const fullName = m.user!.name;
+                return fullName.split(' ')[0]; // Get first name
+              });
+
             return (
               <div
                 key={team.id}
-                className="bg-[#121212] border border-[#6c255f] rounded-lg p-6 hover:border-[#8aaafc] transition-all"
+                className="bg-[#121212] border border-[#6c255f] rounded-lg p-6 hover:border-[#8aaafc] transition-all flex flex-col h-full"
               >
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="text-xl font-bold text-white">{team.name}</h3>
@@ -357,12 +410,27 @@ export default function TeamsPage() {
                 {team.description && (
                   <p className="text-gray-300 mb-4 text-sm">{team.description}</p>
                 )}
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-400">
                     {memberCount} / {team.max_members} members
                   </span>
                 </div>
-                <div className="flex gap-2">
+                {firstNames.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-400 mb-2">Members:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {firstNames.map((firstName, idx) => (
+                        <span
+                          key={idx}
+                          className="text-sm bg-[#0c0c0c] text-gray-300 px-3 py-1 rounded border border-gray-700"
+                        >
+                          {firstName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="flex gap-2 mt-auto">
                   {isMember ? (
                     <button
                       onClick={() => handleLeave(team.id)}
