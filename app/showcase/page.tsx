@@ -16,6 +16,7 @@ interface Project {
   video_url: string;
   track: string;
   showcase_vote_count: number;
+  judge_vote_count: number;
   judges_score: number;
   is_winner: boolean;
   winner_category: string;
@@ -60,18 +61,42 @@ export default function ShowcasePage() {
 
     const { data } = await query;
     if (data) {
-      // Load team names
+      // Load team names and ideas
       const projectsWithTeams = await Promise.all(
         data.map(async (project) => {
           if (project.team_id) {
             const { data: team } = await supabase
               .from('teams')
-              .select('name')
+              .select('name, idea_id')
               .eq('id', project.team_id)
               .single();
-            return { ...project, team: team || undefined };
+            
+            if (team?.idea_id) {
+              const { data: idea } = await supabase
+                .from('ideas')
+                .select('id, title, description')
+                .eq('id', team.idea_id)
+                .single();
+              return { 
+                ...project, 
+                team: team ? { ...team, idea: idea || undefined } : undefined,
+                // Use idea title/description if project fields are empty
+                title: project.title || idea?.title || 'Untitled Project',
+                description: project.description || idea?.description || 'No description provided.'
+              };
+            }
+            return { 
+              ...project, 
+              team: team || undefined,
+              title: project.title || 'Untitled Project',
+              description: project.description || 'No description provided.'
+            };
           }
-          return project;
+          return {
+            ...project,
+            title: project.title || 'Untitled Project',
+            description: project.description || 'No description provided.'
+          };
         })
       );
       setProjects(projectsWithTeams);

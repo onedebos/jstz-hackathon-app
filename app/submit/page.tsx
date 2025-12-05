@@ -11,6 +11,12 @@ import { isFeatureOpen } from '@/lib/phases';
 interface Team {
   id: string;
   name: string;
+  idea_id?: string;
+  idea?: {
+    id: string;
+    title: string;
+    description: string;
+  };
 }
 
 export default function SubmitPage() {
@@ -75,19 +81,52 @@ export default function SubmitPage() {
       const teamIds = memberships.map(m => m.team_id);
       const { data: teamsData } = await supabase
         .from('teams')
-        .select('id, name')
+        .select('id, name, idea_id')
         .in('id', teamIds);
-      if (teamsData) setTeams(teamsData);
+      
+      if (teamsData) {
+        // Load idea data for each team
+        const teamsWithIdeas = await Promise.all(
+          teamsData.map(async (team) => {
+            if (team.idea_id) {
+              const { data: idea } = await supabase
+                .from('ideas')
+                .select('id, title, description')
+                .eq('id', team.idea_id)
+                .single();
+              return { ...team, idea: idea || undefined };
+            }
+            return team;
+          })
+        );
+        setTeams(teamsWithIdeas);
+      }
     }
   }
+
+  useEffect(() => {
+    // When team is selected, auto-populate title and description from idea
+    if (selectedTeam) {
+      const team = teams.find(t => t.id === selectedTeam);
+      if (team?.idea) {
+        setTitle(team.idea.title);
+        setDescription(team.idea.description);
+      }
+    }
+  }, [selectedTeam, teams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedTeam || !user) return;
 
+    // Get the team's idea to ensure we have title and description
+    const team = teams.find(t => t.id === selectedTeam);
+    const finalTitle = title || team?.idea?.title || 'Untitled Project';
+    const finalDescription = description || team?.idea?.description || 'No description provided.';
+
     setSubmitting(true);
     try {
-      const project = await submitProject(selectedTeam, title, description, repoUrl, demoUrl, videoUrl, '', presentationUrl);
+      const project = await submitProject(selectedTeam, finalTitle, finalDescription, repoUrl, demoUrl, videoUrl, '', presentationUrl);
       
       // Submit feedback if provided
       if (feedbackCategory && feedbackDescription) {

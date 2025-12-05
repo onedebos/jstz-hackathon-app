@@ -180,6 +180,63 @@ export async function unvoteShowcase(projectId: string, userId: string) {
   revalidatePath('/showcase');
 }
 
+// Judge votes (with ranking: 1 = 1st, 2 = 2nd, 3 = 3rd)
+export async function voteJudgeRank(projectId: string, judgeName: string, rank: number) {
+  // First, check if this rank is already taken by another project for this judge
+  const { data: existing } = await supabase
+    .from('judge_votes')
+    .select('id')
+    .eq('judge_name', judgeName)
+    .eq('rank', rank)
+    .single();
+
+  if (existing) {
+    // Remove the existing vote for this rank
+    await supabase
+      .from('judge_votes')
+      .delete()
+      .eq('id', existing.id);
+  }
+
+  // Check if this project already has a rank from this judge
+  const { data: existingProjectVote } = await supabase
+    .from('judge_votes')
+    .select('id')
+    .eq('project_id', projectId)
+    .eq('judge_name', judgeName)
+    .single();
+
+  if (existingProjectVote) {
+    // Update the existing vote
+    const { error } = await supabase
+      .from('judge_votes')
+      .update({ rank })
+      .eq('id', existingProjectVote.id);
+    if (error) throw error;
+  } else {
+    // Insert new vote
+    const { error } = await supabase
+      .from('judge_votes')
+      .insert({ project_id: projectId, judge_name: judgeName, rank });
+    if (error) throw error;
+  }
+
+  revalidatePath('/judges');
+  revalidatePath('/showcase');
+}
+
+export async function unvoteJudgeRank(projectId: string, judgeName: string) {
+  const { error } = await supabase
+    .from('judge_votes')
+    .delete()
+    .eq('project_id', projectId)
+    .eq('judge_name', judgeName);
+
+  if (error) throw error;
+  revalidatePath('/judges');
+  revalidatePath('/showcase');
+}
+
 // Feedback
 export async function submitFeedback(
   userId: string,
@@ -264,11 +321,11 @@ export async function setJudgesScore(projectId: string, score: number) {
 }
 
 export async function revealWinners() {
-  // Get top projects by judges score
+  // Get top projects by judge votes
   const { data: topJudges } = await supabase
     .from('projects')
     .select('*')
-    .order('judges_score', { ascending: false })
+    .order('judge_vote_count', { ascending: false })
     .limit(3);
 
   // Get top project by showcase votes
@@ -301,5 +358,6 @@ export async function revealWinners() {
   await togglePhase('winners_revealed', true);
   revalidatePath('/admin');
   revalidatePath('/showcase');
+  revalidatePath('/judges');
 }
 
