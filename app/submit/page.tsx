@@ -21,12 +21,14 @@ export default function SubmitPage() {
   const [repoUrl, setRepoUrl] = useState('');
   const [demoUrl, setDemoUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
+  const [presentationUrl, setPresentationUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
   // Feedback fields
   const [feedbackCategory, setFeedbackCategory] = useState('');
   const [feedbackDescription, setFeedbackDescription] = useState('');
   const [feedbackSeverity, setFeedbackSeverity] = useState('');
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { user, loading } = useUser();
   const router = useRouter();
 
@@ -85,7 +87,7 @@ export default function SubmitPage() {
 
     setSubmitting(true);
     try {
-      const project = await submitProject(selectedTeam, title, description, repoUrl, demoUrl, videoUrl, '');
+      const project = await submitProject(selectedTeam, title, description, repoUrl, demoUrl, videoUrl, '', presentationUrl);
       
       // Submit feedback if provided
       if (feedbackCategory && feedbackDescription) {
@@ -106,16 +108,6 @@ export default function SubmitPage() {
       setSubmitting(false);
     }
   }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0c0c0c] py-16 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
-
-  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     if (!user && !loading) {
@@ -221,6 +213,17 @@ export default function SubmitPage() {
                     value={repoUrl}
                     onChange={(e) => setRepoUrl(e.target.value)}
                     placeholder="https://github.com/..."
+                    className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 text-white focus:border-[#8aaafc] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-white font-bold mb-2">Presentation URL <span className="text-gray-400 text-sm font-normal">(optional) [change access permission to "anyone can view"]</span></label>
+                  <input
+                    type="url"
+                    value={presentationUrl}
+                    onChange={(e) => setPresentationUrl(e.target.value)}
+                    placeholder="https://docs.google.com/presentation/..."
                     className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 text-white focus:border-[#8aaafc] focus:outline-none"
                   />
                 </div>

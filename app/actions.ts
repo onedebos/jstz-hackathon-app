@@ -137,7 +137,8 @@ export async function submitProject(
   repoUrl: string,
   demoUrl: string,
   videoUrl: string,
-  track: string
+  track: string,
+  presentationUrl: string
 ) {
   const { data, error } = await supabase
     .from('projects')
@@ -149,6 +150,7 @@ export async function submitProject(
       demo_url: demoUrl,
       video_url: videoUrl,
       track,
+      presentation_url: presentationUrl,
     })
     .select()
     .single();

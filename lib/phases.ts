@@ -92,21 +92,13 @@ export async function isFeatureOpen(
 ): Promise<boolean> {
   const phaseOpen = await getPhaseState(phaseName);
   
-  // If phase is explicitly set, use it (override dates)
-  // If phase is not set (null/undefined), fall back to date check
-  // If phase is explicitly closed (false), respect it
+  // If phase is explicitly set to true, use it (override dates)
   if (phaseOpen) {
     return true; // Phase override: open
   }
   
-  // Check if phase has been explicitly set to false
-  // If it exists in DB and is false, respect it
-  const allPhases = await getAllPhases();
-  if (allPhases.has(phaseName)) {
-    return false; // Phase override: closed
-  }
-  
-  // Fall back to date-based check
+  // If phase is false or doesn't exist, check the date
+  // This allows date-based opening even if phase is set to false
   return dateCheck();
 }
 

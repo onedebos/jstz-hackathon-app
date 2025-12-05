@@ -67,7 +67,7 @@ const query = qs.stringify({
   },
   populate: {
     schedule_items: {
-      sort: ['date:asc', 'time:asc'],
+      sort: ['date:desc', 'time:desc'],
     },
   },
   pagination: {
@@ -130,7 +130,7 @@ export async function getHackathonBySlug(slug: string): Promise<Hackathon | null
   const query = qs.stringify({
     filters: { slug: { $eq: slug } },
     populate: {
-      schedule_items: { sort: ['date:asc', 'time:asc'] },
+      schedule_items: { sort: ['date:desc', 'time:desc'] },
     },
   });
 
