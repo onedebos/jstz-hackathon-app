@@ -321,38 +321,43 @@ export async function setJudgesScore(projectId: string, score: number) {
 }
 
 export async function revealWinners() {
-  // Get top projects by judge votes
-  const { data: topJudges } = await supabase
-    .from('projects')
-    .select('*')
-    .order('judge_vote_count', { ascending: false })
-    .limit(3);
-
-  // Get top project by showcase votes
+  // Get top project by showcase votes (Hacker's Choice - First Prize)
   const { data: topShowcase } = await supabase
     .from('projects')
     .select('*')
     .order('showcase_vote_count', { ascending: false })
     .limit(1);
 
-  // Mark winners
-  if (topJudges) {
-    for (let i = 0; i < topJudges.length; i++) {
-      await supabase
-        .from('projects')
-        .update({
-          is_winner: true,
-          winner_category: i === 0 ? 'First Place' : i === 1 ? 'Second Place' : 'Third Place',
-        })
-        .eq('id', topJudges[i].id);
-    }
-  }
+  // Get top 2 projects by judge votes (2nd and 3rd place)
+  const { data: topJudges } = await supabase
+    .from('projects')
+    .select('*')
+    .order('judge_vote_count', { ascending: false })
+    .limit(2);
 
+  // Mark Hacker's Choice (First Prize)
   if (topShowcase && topShowcase[0]) {
     await supabase
       .from('projects')
       .update({ is_winner: true, winner_category: "Hacker's Choice" })
       .eq('id', topShowcase[0].id);
+  }
+
+  // Mark 2nd and 3rd place from judge votes
+  if (topJudges) {
+    for (let i = 0; i < topJudges.length; i++) {
+      // Skip if this project is already the Hacker's Choice winner
+      if (topShowcase && topShowcase[0] && topJudges[i].id === topShowcase[0].id) {
+        continue;
+      }
+      await supabase
+        .from('projects')
+        .update({
+          is_winner: true,
+          winner_category: i === 0 ? 'Second Place' : 'Third Place',
+        })
+        .eq('id', topJudges[i].id);
+    }
   }
 
   await togglePhase('winners_revealed', true);

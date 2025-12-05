@@ -1,10 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { useUser } from '@/components/UserProvider';
-import { voteShowcase, unvoteShowcase } from '@/app/actions';
 
 interface Project {
   id: string;
@@ -33,16 +30,10 @@ interface Project {
 }
 
 export default function ShowcasePage() {
-  const { user } = useUser();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [votedProjects, setVotedProjects] = useState<Set<string>>(new Set());
-  const [sortBy, setSortBy] = useState<'votes' | 'recent'>('votes');
 
   useEffect(() => {
     loadProjects();
-    if (user) {
-      loadVotes();
-    }
 
     // Subscribe to real-time updates
     const channel = supabase
@@ -50,22 +41,19 @@ export default function ShowcasePage() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => {
         loadProjects();
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'showcase_votes' }, () => {
-        loadProjects();
-        loadVotes();
-      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, []);
 
   async function loadProjects() {
+    // Load all projects
     let query = supabase
       .from('projects')
       .select('*')
-      .order('submitted_at', { ascending: false });
+      .order('judge_vote_count', { ascending: false });
 
     const { data } = await query;
     if (data) {
@@ -111,71 +99,36 @@ export default function ShowcasePage() {
     }
   }
 
-  async function loadVotes() {
-    if (!user) return;
-    const { data } = await supabase
-      .from('showcase_votes')
-      .select('project_id')
-      .eq('voter_id', user.id);
-    if (data) {
-      setVotedProjects(new Set(data.map(v => v.project_id)));
-    }
-  }
-
-  async function handleVote(projectId: string) {
-    if (!user) return;
-    if (votedProjects.has(projectId)) {
-      await unvoteShowcase(projectId, user.id);
-    } else {
-      await voteShowcase(projectId, user.id);
-    }
-    await loadVotes();
-  }
-
+  // Sort: winners first (Hacker's Choice, 2nd, 3rd), then others by judge vote count
   const sortedProjects = [...projects].sort((a, b) => {
-    if (sortBy === 'votes') {
-      return b.showcase_vote_count - a.showcase_vote_count;
+    // Winners first
+    if (a.is_winner && !b.is_winner) return -1;
+    if (!a.is_winner && b.is_winner) return 1;
+    
+    // Among winners, sort by category
+    if (a.is_winner && b.is_winner) {
+      const order = ["Hacker's Choice", 'Second Place', 'Third Place'];
+      const aIndex = order.indexOf(a.winner_category);
+      const bIndex = order.indexOf(b.winner_category);
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex;
+      }
     }
-    return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime();
+    
+    // Among non-winners, sort by judge vote count
+    return (b.judge_vote_count || 0) - (a.judge_vote_count || 0);
   });
 
   return (
     <div className="min-h-screen bg-[#0c0c0c] py-16">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-12">
-          <h1 className="text-5xl font-bold">
+        <div className="mb-12">
+          <h1 className="text-5xl font-bold mb-4">
             <span className="text-white">Showcase</span>
           </h1>
-          <div className="flex gap-4 items-center">
-            <div className="flex gap-4">
-              <button
-                onClick={() => setSortBy('votes')}
-                className={`px-4 py-2 rounded transition-colors ${
-                  sortBy === 'votes'
-                    ? 'bg-[#6c255f] text-white'
-                    : 'bg-[#121212] text-gray-300 hover:bg-[#1a1a1a]'
-                }`}
-              >
-                Most Votes
-              </button>
-              <button
-                onClick={() => setSortBy('recent')}
-                className={`px-4 py-2 rounded transition-colors ${
-                  sortBy === 'recent'
-                    ? 'bg-[#6c255f] text-white'
-                    : 'bg-[#121212] text-gray-300 hover:bg-[#1a1a1a]'
-                }`}
-              >
-                Most Recent
-              </button>
-            </div>
-            <Link
-              href="/submit"
-              className="bg-[#8aaafc] hover:bg-[#6b8dd9] text-white px-6 py-2 rounded transition-colors font-semibold"
-            >
-              Submit Project
-            </Link>
-          </div>
+          <p className="text-gray-400 text-lg">
+            All submitted projects. Winners are highlighted with trophies.
+          </p>
         </div>
 
         {/* Projects Grid */}
@@ -187,9 +140,19 @@ export default function ShowcasePage() {
                 project.is_winner ? 'border-yellow-500 border-2' : 'border-[#6c255f]'
               }`}
             >
-              {project.is_winner && (
+              {project.is_winner && project.winner_category === "Hacker's Choice" && (
                 <div className="absolute -top-3 -right-3 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                  🏆 {project.winner_category}
+                  🏆 Hacker's Choice
+                </div>
+              )}
+              {project.is_winner && project.winner_category === 'Second Place' && (
+                <div className="absolute -top-3 -right-3 bg-gray-400 text-black px-3 py-1 rounded-full text-xs font-bold">
+                  🥈 Second Place
+                </div>
+              )}
+              {project.is_winner && project.winner_category === 'Third Place' && (
+                <div className="absolute -top-3 -right-3 bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold">
+                  🥉 Third Place
                 </div>
               )}
 
@@ -250,31 +213,18 @@ export default function ShowcasePage() {
                 )}
               </div>
 
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => handleVote(project.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-                    votedProjects.has(project.id)
-                      ? 'bg-[#6c255f] text-white'
-                      : 'bg-[#0c0c0c] text-gray-300 hover:bg-[#121212]'
-                  }`}
-                >
-                  <span>🔥</span>
-                  <span>{project.showcase_vote_count}</span>
-                </button>
-                {project.judges_score !== null && (
-                  <span className="text-xs text-gray-400">
-                    ⭐ {project.judges_score}
-                  </span>
-                )}
-              </div>
+              {project.judge_vote_count > 0 && (
+                <div className="text-sm text-gray-400 mt-4">
+                  <span className="text-[#8aaafc] font-semibold">{project.judge_vote_count}</span> judge points
+                </div>
+              )}
             </div>
           ))}
         </div>
 
         {projects.length === 0 && (
           <div className="text-center text-gray-400 mt-12">
-            <p className="text-xl">No projects yet. Submit the first one! 🎄</p>
+            <p className="text-xl">No projects submitted yet.</p>
           </div>
         )}
       </div>
