@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Countdown } from '@/components/Countdown';
 import { Snowfall } from '@/components/Snowfall';
 import { getCurrentHackathon } from '@/lib/strapi';
 import { renderRichText } from '@/lib/strapi-utils';
@@ -29,12 +28,10 @@ export default async function Home() {
             Build the future, using JavaScript on chain. Win prizes 🎄 ❄️ 🎁 🎄 ✨
           </p>
           
-          {/* Countdown */}
+          {/* Hackathon Status */}
           <div className="mb-12 flex justify-center">
-            <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-4">
-              <h2 className="text-xl mb-3 text-white">Starts in:</h2>
-              <Countdown />
-              <p className="text-sm text-gray-400 mt-3 text-center">starts Dec. 1, 2025</p>
+            <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-white">Hackathon Ended</h2>
             </div>
           </div>
         </div>
