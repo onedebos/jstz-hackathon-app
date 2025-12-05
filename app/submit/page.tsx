@@ -21,7 +21,6 @@ export default function SubmitPage() {
   const [repoUrl, setRepoUrl] = useState('');
   const [demoUrl, setDemoUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
-  const [track, setTrack] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
   // Feedback fields
@@ -82,11 +81,11 @@ export default function SubmitPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title || !description || !selectedTeam || !user) return;
+    if (!selectedTeam || !user) return;
 
     setSubmitting(true);
     try {
-      const project = await submitProject(selectedTeam, title, description, repoUrl, demoUrl, videoUrl, track);
+      const project = await submitProject(selectedTeam, title, description, repoUrl, demoUrl, videoUrl, '');
       
       // Submit feedback if provided
       if (feedbackCategory && feedbackDescription) {
@@ -179,6 +178,23 @@ export default function SubmitPage() {
           </div>
         ) : (
           <div className="max-w-2xl mx-auto">
+            <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-8 mb-6">
+              <div className="bg-[#1a1a2e] border border-[#8aaafc] rounded-lg p-6 mb-6">
+                <h2 className="text-xl font-bold text-white mb-3">📋 Demo Day Presentation</h2>
+                <p className="text-gray-300 mb-3">
+                  Before submitting your project, please make a copy of the{' '}
+                  <a
+                    href="https://docs.google.com/presentation/d/1vy3h_HhovbWSla4kuXlYyYsv548ZtfAmBT-H2Kn1SiQ/edit?slide=id.g3adcfc479ea_0_2#slide=id.g3adcfc479ea_0_2"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#8aaafc] hover:underline"
+                  >
+                    presentation template for the demo day call
+                  </a>
+                  {' '}and fill it out.
+                </p>
+              </div>
+            </div>
             <div className="bg-[#121212] border border-[#6c255f] rounded-lg p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -199,29 +215,7 @@ export default function SubmitPage() {
                 </div>
 
                 <div>
-                  <label className="block text-white font-bold mb-2">Project Title *</label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 text-white focus:border-[#8aaafc] focus:outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-white font-bold mb-2">Description *</label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={6}
-                    className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 text-white focus:border-[#8aaafc] focus:outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-white font-bold mb-2">Repository URL</label>
+                  <label className="block text-white font-bold mb-2">Repository URL <span className="text-gray-400 text-sm font-normal">(optional)</span></label>
                   <input
                     type="url"
                     value={repoUrl}
@@ -232,7 +226,7 @@ export default function SubmitPage() {
                 </div>
 
                 <div>
-                  <label className="block text-white font-bold mb-2">Demo URL</label>
+                  <label className="block text-white font-bold mb-2">Demo URL <span className="text-gray-400 text-sm font-normal">(optional)</span></label>
                   <input
                     type="url"
                     value={demoUrl}
@@ -243,23 +237,12 @@ export default function SubmitPage() {
                 </div>
 
                 <div>
-                  <label className="block text-white font-bold mb-2">Video URL</label>
+                  <label className="block text-white font-bold mb-2">Video URL <span className="text-gray-400 text-sm font-normal">(optional)</span></label>
                   <input
                     type="url"
                     value={videoUrl}
                     onChange={(e) => setVideoUrl(e.target.value)}
                     placeholder="https://youtube.com/..."
-                    className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 text-white focus:border-[#8aaafc] focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-white font-bold mb-2">Track</label>
-                  <input
-                    type="text"
-                    value={track}
-                    onChange={(e) => setTrack(e.target.value)}
-                    placeholder="e.g., AI, DeFi, Infrastructure..."
                     className="w-full bg-[#0c0c0c] border border-gray-700 rounded px-4 py-2 text-white focus:border-[#8aaafc] focus:outline-none"
                   />
                 </div>
