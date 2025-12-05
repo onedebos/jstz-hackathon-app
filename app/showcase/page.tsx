@@ -14,6 +14,7 @@ interface Project {
   repo_url: string;
   demo_url: string;
   video_url: string;
+  presentation_url: string;
   track: string;
   showcase_vote_count: number;
   judge_vote_count: number;
@@ -21,7 +22,14 @@ interface Project {
   is_winner: boolean;
   winner_category: string;
   submitted_at: string;
-  team?: { name: string };
+  team?: { 
+    name: string;
+    idea?: {
+      id: string;
+      title: string;
+      description: string;
+    };
+  };
 }
 
 export default function ShowcasePage() {
@@ -185,9 +193,11 @@ export default function ShowcasePage() {
                 </div>
               )}
 
-              <h3 className="text-xl font-bold text-white mb-2">{project.title}</h3>
+              {project.team?.idea?.title && (
+                <h2 className="text-2xl font-bold text-white mb-3">{project.team.idea.title}</h2>
+              )}
               {project.team && (
-                <p className="text-sm text-gray-400 mb-2">by {project.team.name}</p>
+                <p className="text-sm text-gray-400 mb-3">by {project.team.name}</p>
               )}
               <p className="text-gray-300 mb-4 text-sm line-clamp-3">{project.description}</p>
 
@@ -226,6 +236,16 @@ export default function ShowcasePage() {
                     className="text-xs bg-[#0c0c0c] px-2 py-1 rounded hover:bg-[#1a1a1a]"
                   >
                     🎥 Video
+                  </a>
+                )}
+                {project.presentation_url && (
+                  <a
+                    href={project.presentation_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs bg-[#0c0c0c] px-2 py-1 rounded hover:bg-[#1a1a1a]"
+                  >
+                    📋 Presentation
                   </a>
                 )}
               </div>
